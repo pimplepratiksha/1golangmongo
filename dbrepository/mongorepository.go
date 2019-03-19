@@ -1,13 +1,14 @@
 package dbrepository
 
 import (
-	domain "../domain"
+	domain "assignment1/domain"
 	mgo "gopkg.in/mgo.v2"
 	bson "gopkg.in/mgo.v2/bson"
 	"encoding/json"
 	"bufio"
 	"os"
 	"fmt"
+	"strings"
 )
 
 type MongoRepository struct {
@@ -37,9 +38,7 @@ func (r *MongoRepository) Insert(filename string) (int,error){
 	for fp.Scan(){
 			rcnt+=1
 			line = fp.Text()
-			//fmt.Print(line)
 			json.Unmarshal([]byte(line),&final)
-			//fmt.Println(final)
 			final.DBID=domain.NewID()
 			p,_:=r.Store(&final)
 			fmt.Println(p)
@@ -87,7 +86,8 @@ func (r *MongoRepository) FindByName(name string) ([]*domain.Restaurant, error) 
 	session := r.mongoSession.Clone()
 	defer session.Close()
 	coll := session.DB(r.db).C(collectionName)
-	err := coll.Find(bson.M{"name":bson.RegEx{name,"i"}}).All(&result) 	
+	//err := coll.Find(bson.M{"name":bson.RegEx{name,"i"}}).All(&result) 	
+	err := coll.Find(bson.M{"name":name}).All(&result) 	
 	switch err {
 		case nil:
 			return result, nil
@@ -165,21 +165,56 @@ func (r *MongoRepository) FindByTypeOfPostCode(postcode string) ([]*domain.Resta
 	}
 }
 //Count number of Restaurant By Type Of Food(filter)
-/*func (r *MongoRepository) CountByTypeOfFood(foodtype string) (int, error) {
-	//rcnt:=0
-	result:= []*domain.Restaurant{}
+func (r *MongoRepository) CountByTypeOfFood(foodtype string) (int, error) {
 	session := r.mongoSession.Clone()
 	defer session.Close()
 	coll := session.DB(r.db).C(collectionName)
-	err := coll.Find(bson.M{"type_of_food": foodtype}).All(&result) 	
+	fcnt,err := coll.Find(bson.M{"type_of_food": foodtype}).Count() 	
 	switch err {
 		case nil:
-			return result.Count(), nil
+			return fcnt, nil
 		case mgo.ErrNotFound:
 			return 0, domain.ErrNotFound
 		default:
-			return 1, err
+			return 1,err
 	}
 }
-*/
+
+//Count number of Restaurant By Type Of Post Code(filter)
+func (r *MongoRepository) CountByTypeOfPostCode(postcode string) (int, error) {
+	session := r.mongoSession.Clone()
+	defer session.Close()
+	coll := session.DB(r.db).C(collectionName)
+	fcnt,err := coll.Find(bson.M{"postcode": postcode}).Count() 	
+	switch err {
+		case nil:
+			return fcnt, nil
+		case mgo.ErrNotFound:
+			return 0, domain.ErrNotFound
+		default:
+			return 1,err
+	}
+}
+
+//Search on Restaurant (filter)
+func (r *MongoRepository)  Search(query string) ([]*domain.Restaurant, error){
+	result := []*domain.Restaurant{}
+	session := r.mongoSession.Clone()
+	defer session.Close()
+	coll := session.DB(r.db).C(collectionName)
+	
+	arr:=strings.Split(query,"=")
+	key:=arr[0]
+	value:=arr[1]
+			
+	err := coll.Find(bson.M{key:value}).All(&result) 	
+	switch err {
+		case nil:
+			return result, nil
+		case mgo.ErrNotFound:
+			return nil, domain.ErrNotFound
+		default:
+			return nil, err
+	}
+}
 
