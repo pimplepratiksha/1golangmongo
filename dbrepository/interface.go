@@ -1,7 +1,6 @@
 package dbrepository
 
-//import "github.com/priteshgudge/mongorestaurantsample/domain"
-import "../domain"
+import "assignment1/domain"
 
 //Reader read from db
 type Reader interface {
@@ -22,8 +21,7 @@ type Writer interface {
 type Filter interface {
 	FindByTypeOfFood(foodType string) ([]*domain.Restaurant, error)
 	FindByTypeOfPostCode(postCode string) ([]*domain.Restaurant, error)
-	//Search --> across all string fields regex match with case insensitive
-	//substring match accross all string fields
+	//Search --> across all string fields regex match with case insensitive substring match accross all string fields
 	Search(query string) ([]*domain.Restaurant, error)
 }
 
