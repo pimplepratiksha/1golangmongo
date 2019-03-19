@@ -86,7 +86,7 @@ func (r *MongoRepository) FindByName(name string) ([]*domain.Restaurant, error) 
 	session := r.mongoSession.Clone()
 	defer session.Close()
 	coll := session.DB(r.db).C(collectionName)
-	//err := coll.Find(bson.M{"name":bson.RegEx{name,"i"}}).All(&result) 	
+	
 	err := coll.Find(bson.M{"name":name}).All(&result) 	
 	switch err {
 		case nil:
